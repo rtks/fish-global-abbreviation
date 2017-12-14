@@ -1,14 +1,17 @@
 function __gabbr_expand
 
-    if test (string trim (commandline -b)) = ''
+    if test "(string trim (commandline -b))" = ''
         return
     end
+
+    set -l token (commandline -t)
 
     # expand abbreviations
     if test 0 = (count (commandline -poc))
         for abbr in $fish_user_abbreviations
-            echo $abbr | read word phrase
-            if test "$word" = (commandline -t)
+            set -l word   (string split -m1 ' ' $abbr)[1]
+            set -l phrase (string split -m1 ' ' $abbr)[2]
+            if test "$word" = "$token"
                 commandline -t $phrase
             end
         end
@@ -16,9 +19,9 @@ function __gabbr_expand
 
     # expand global abbreviations
     for abbr in $global_abbreviations
-        echo $abbr | read word phrase
-
-        if string match -q -- "*.$word" (commandline -t)
+        set -l word   (string split -m1 ' ' $abbr)[1]
+        set -l phrase (string split -m1 ' ' $abbr)[2]
+        if string match -q -- "*.$word" "$token"
             if string match -q -- '-x *' $phrase
                 set -l file (commandline -t)
                 if test 0 = (count (commandline -poc))
@@ -26,7 +29,7 @@ function __gabbr_expand
                     commandline -t "$cmd $file"
                 end
             end
-        else if test "$word" = (commandline -t)
+        else if test "$word" = "$token"
             if string match -q -- '-x *' $phrase
                 # do nothing
             else if string match -q -- '-f *' $phrase
